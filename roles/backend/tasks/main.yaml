@@ -5,7 +5,7 @@
   ansible.builtin.command: dnf module enable nodejs:20 -y
 
 - name: install nodejs
-  ansible.builtin.dnf: # only works for Redhat family
+  ansible.builtin.dnf:
     name: "{{ item }}"
     state: installed
   loop:
@@ -22,13 +22,6 @@
   ansible.builtin.import_role:
     name: common
     tasks_from: app-pre-req
-
-# - name: install npm dependencies
-#   tags:
-#   - deployment
-#   ansible.builtin.command: npm install
-#   args:
-#     chdir: /app
 
 - name: copy backend service
   ansible.builtin.template:
@@ -47,9 +40,9 @@
 - name: install python mysql dependencies
   ansible.builtin.pip:
     name:
-      - PyMySQL # to connect MySQL DB from Ansible
+      - PyMySQL
       - cryptography
-    executable: pip3.9 # pip3.11 if python version is 3.11
+    executable: pip3.9
 
 - name: import data into mysql
   community.mysql.mysql_db:
@@ -59,6 +52,27 @@
     target: /app/schema/backend.sql
     state: import
     name: all
+
+- name: check MySQL installation
+  ansible.builtin.command: mysql --version
+  register: mysql_version_result
+  ignore_errors: true
+
+- name: debug MySQL version result
+  ansible.builtin.debug:
+    msg: "MySQL version: {{ mysql_version_result.stdout }}"
+  when: mysql_version_result.rc == 0 # Only show if MySQL command was successful
+
+- name: test MySQL connection
+  ansible.builtin.command: |
+    mysql -h {{ login_host }} -u {{ login_user }} -p{{ login_password }} -e "SELECT 1;"
+  register: mysql_connection_result
+  ignore_errors: true
+
+- name: debug MySQL connection result
+  ansible.builtin.debug:
+    msg: "MySQL connection test output: {{ mysql_connection_result.stdout }}"
+  when: mysql_connection_result.rc == 0 # Only show if connection command was successful
 
 - name: start and enable backend service
   tags:
