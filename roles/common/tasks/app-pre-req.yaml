@@ -1,3 +1,6 @@
+- name: Debug app_location
+  debug:
+    msg: "The app_location is set to {{ app_location }}"
 - name: delete app directory
   ansible.builtin.file:
     path: "{{ app_location }}"
@@ -14,8 +17,3 @@
     src: "https://expense-builds.s3.us-east-1.amazonaws.com/expense-{{ component }}-v2.zip"
     dest: "{{ app_location }}"
     remote_src: yes
-# - name: download the artifact from nexus
-#   ansible.builtin.unarchive:
-#     src: "http://{{ nexus_url }}/repository/{{ component }}/com/expense/{{ component }}/{{ appVersion }}/{{ component }}-{{ appVersion }}.zip"
-#     dest: "{{ app_location }}"
-#     remote_src: yes
